@@ -10,7 +10,7 @@ const getCatElem = (cat) => `
   <div class="card-body">
     <h5 class="card-title">${cat.name}</h5>
     <p class="card-text">${cat.description}</p>
-    <button type="button" data-action="edit" data-id=${cat.id} class="btn btn-primary" onClick="openModal()">Edit</button>
+    <button type="button" data-action="edit" data-id=${cat.id} class="btn btn-primary">Edit</button>
     <button type="button" data-action="detail" data-id=${cat.id} class="btn btn-info">Detail</button>
     <button type="button" data-action="delete" data-id=${cat.id} class="btn btn-danger">Delete</button>
   </div>
@@ -98,55 +98,72 @@ function openModalHandler() {
     const catParams = getCatParams(
       Object.fromEntries(new FormData(submitEvent.target).entries()),
     );
-    console.log(catParams);
     addNewCat(catParams);
-    $createCatForm.addEventListener('change', () => {
-      const formattedData = getCatParams(
-        Object.fromEntries(new FormData($createCatForm).entries()),
-      );
-
-      localStorage.setItem('createCatLSData', JSON.stringify(formattedData));
-    });
+  });
+  $createCatForm.addEventListener('change', () => {
+    const formattedData = getCatParams(
+      Object.fromEntries(new FormData($createCatForm).entries()),
+    );
+    localStorage.setItem('createCatLSData', JSON.stringify(formattedData));
   });
 }
 addCatBtn.onclick = openModalHandler;
 
-/* function openCreateCatModal() {
-  modal.style.display = 'block';
-  createCatForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    addNewCat(getCatParams(e.target));
-    console.log(e.target, new FormData(e.target));
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    $modal.style.display = 'none';
+    $modal.removeEventListener('click', closeModalHandler);
+    $modalContent.innerHTML = '';
+  }
+});
+
+function openEditModal(e) {
+  $modal.style.display = 'block';
+  $modal.addEventListener('click', closeModalHandler);
+  const cloneCatCreateForm = $createCatFormTemplate.content.cloneNode(true);
+  $modalContent.appendChild(cloneCatCreateForm);
+  const $editCatForm = document.forms.createCatForm;
+  fetch(`https://cats.petiteweb.dev/api/single/XeniaGorbunova/show/${+e.target.dataset.id}`)
+    .then((res) => res.json())
+    .then((data) => {
+      Object.keys(data).forEach((key) => {
+        $editCatForm[key].value = data[key];
+      });
+    });
+  $editCatForm.addEventListener('submit', (submitEvent) => {
+    submitEvent.preventDefault();
+    const catParams = getCatParams(
+      Object.fromEntries(new FormData(submitEvent.target).entries()),
+    );
+    editCat(catParams);
+    e.target.closest('.card').remove();
   });
 }
-function closeCreateCatModal() {
-  modal.style.display = 'none';
-  createCatForm.removeEventListener('submit');
-}
 
-addCatBtn.onclick = openCreateCatModal;
+function openDetailModal(e) {}
 
-saveCatBtn.addEventListener('click', (e) => {
-  addNewCat(getCatParams(e.closest('form')));
-  closeCreateCatModal();
+$wrapper.addEventListener('click', (e) => {
+  e.preventDefault();
+  if (e.target.dataset.action === 'edit') openEditModal(e);
+  if (e.target.dataset.action === 'detail') openDetailModal(e);
 });
-window.onclick = function (event) {
-  if (event.target == modal) closeCreateCatModal();
-}; */
 
 function editCat(catParams) {
-  fetch(`https://cats.petiteweb.dev/api/single/XeniaGorbunova/update/${id}`, {
+  fetch(`https://cats.petiteweb.dev/api/single/XeniaGorbunova/update/${catParams.id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(catParams),
   })
-    .then((response) => response.json())
-    .then((data) => {
-      console.log('Success:', data);
+    .then((res) => {
+      if (res.status === 200) {
+        $modal.style.display = 'none';
+        $modalContent.innerHTML = '';
+        $modal.removeEventListener('click', closeModalHandler);
+        return $wrapper.insertAdjacentHTML('afterbegin', getCatElem(catParams));
+      }
+      throw Error('Ошибка при добавлении кота');
     })
-    .catch((error) => {
-      console.error('Error:', error);
-    });
+    .catch(alert);
 }
