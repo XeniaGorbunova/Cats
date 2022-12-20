@@ -17,16 +17,23 @@
   </div>
   <div class="modal">
     <div class="modal-content">
-      <p>Tell me about your new cat</p>
-      <input type="text" class="modal-input" placeholder="id">
-      <input type="text" class="modal-input" placeholder="name">
-      <input type="text" class="modal-input" placeholder="image url">
-      <input type="text" class="modal-input" placeholder="age">
-      <input type="text" class="modal-input" placeholder="rate">
-      <input type="text" class="modal-input" placeholder="favorite">
-      <input type="text" class="modal-input" placeholder="description">
-      <span class="close">Save</span>
     </div>
-  </div>
+  </div>    
+  <template id="createCatForm">
+      <span class="close">x</span>
+      <p>Tell me about your new cat</p>
+      <form name="createCatForm">
+        <input type="number" required class="modal-input" name="id" placeholder="id">
+        <input type="text" required class="modal-input" name="name" placeholder="name">
+        <input type="text" class="modal-input" name="image" placeholder="image url">
+        <input type="number" class="modal-input" name="age" placeholder="age">
+        <label for="rate">How much do you like it?</label>
+        <input type="range" max="10" class="modal-input" name="rate" placeholder="rate" id="rate">
+        <label for="favorite">Is it your favorite cat?</label>
+        <input type="checkbox" class="modal-input" name="favorite" placeholder="favorite" id="favorite">
+        <input type="text" class="modal-input" name="description" placeholder="description">
+        <button type="submit" class="btn btn-primary mt-4">Save</button>
+    </form>
+  </template>
 </body>
 </html>

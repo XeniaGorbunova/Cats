@@ -1,21 +1,9 @@
 const $wrapper = document.querySelector('[data-wr]');
-const modal = document.querySelector('.modal');
+const $modal = document.querySelector('.modal');
+const $modalContent = document.querySelector('.modal-content');
 const addCatBtn = document.getElementById('new');
-const saveCatBtn = document.querySelector('.close');
-function openModal() {
-  modal.style.display = 'block';
-}
-function closeModal() {
-  modal.style.display = 'none';
-}
-addCatBtn.onclick = openModal;
-saveCatBtn.addEventListener('click', () => {
-  addNewCat(getCatParams());
-  closeModal();
-});
-window.onclick = function (event) {
-  if (event.target == modal) closeModal();
-};
+const $createCatFormTemplate = document.getElementById('createCatForm');
+
 const getCatElem = (cat) => `
   <div class="card mb-2 mt-2" style="width: 18rem;">
   <img src=${cat.image} class="card-img-top" alt="cat image">
@@ -37,74 +25,122 @@ fetch('https://cats.petiteweb.dev/api/single/XeniaGorbunova/show/')
 $wrapper.addEventListener('click', (e) => {
   e.preventDefault();
   if (e.target.dataset.action === 'delete') {
-    deleteCat(e.target.dataset.id);
+    deleteCat(e.target.dataset.id, e.target.closest('div'));
     e.target.closest('.card').remove();
   }
 });
 
-function deleteCat(id) {
+function deleteCat(id, elem) {
   fetch(`https://cats.petiteweb.dev/api/single/XeniaGorbunova/delete/${id}`, { method: 'DELETE' })
-    .then(() => {
-      console.log('Delete successfully');
+    .then((res) => {
+      if (res.status === 200) {
+        return elem.remove();
+      }
+
+      alert(`Удаление кота с id = ${Id} не удалось`);
     });
 }
-function getCatParams() {
-  const modalInputs = document.querySelectorAll('.modal-input');
-  const inputsValue = [];
-  modalInputs.forEach((item) => inputsValue.push(item.value));
-  const catParams = {
-    id: +inputsValue[0],
-    name: inputsValue[1],
-    image: inputsValue[2],
-    age: +inputsValue[3],
-    rate: inputsValue[4],
-    favorite: inputsValue[5],
-    description: inputsValue[6],
-  };
-  modalInputs.forEach((item) => { item.value = ''; });
-  return catParams;
-}
-function addNewCat({
-  id, name = 'new cat', image = '', age = 0, rate = 0, favorite = false, description = '',
-}) {
+
+const getCatParams = (formDataObject) => ({
+  ...formDataObject,
+  id: +formDataObject.id,
+  rate: +formDataObject.rate,
+  age: +formDataObject.age,
+  favorite: !!formDataObject.favorite,
+});
+
+function addNewCat(catParams) {
   fetch('https://cats.petiteweb.dev/api/single/XeniaGorbunova/add/', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      id,
-      name,
-      image,
-      age,
-      rate,
-      favorite,
-      description,
-    }),
+    body: JSON.stringify(catParams),
   })
-    .then((response) => response.json())
-    .then((data) => {
-      console.log('Success:', data);
+    .then((res) => {
+      if (res.status === 200) {
+        $modal.style.display = 'none';
+        $modalContent.innerHTML = '';
+        $modal.removeEventListener('click', closeModalHandler);
+        localStorage.removeItem('createCatLSData');
+        return $wrapper.insertAdjacentHTML('afterbegin', getCatElem(catParams));
+      }
+      throw Error('Ошибка при добавлении кота');
     })
-    .catch((error) => {
-      console.error('Error:', error);
-    });
+    .catch(alert);
 }
-function editCat(id, name = 'new cat', image = '', age = 0, rate = 0, favorite = false, description = '') {
+
+function closeModalHandler(e) {
+  const $thisModal = document.querySelector('.modal');
+  const closeNewCatBtn = document.querySelector('.close');
+  if (e.target === closeNewCatBtn || e.target === $thisModal) {
+    $modal.style.display = 'none';
+    $modal.removeEventListener('click', closeModalHandler);
+    $modalContent.innerHTML = '';
+  }
+}
+
+function openModalHandler() {
+  $modal.style.display = 'block';
+  $modal.addEventListener('click', closeModalHandler);
+  const cloneCatCreateForm = $createCatFormTemplate.content.cloneNode(true);
+  $modalContent.appendChild(cloneCatCreateForm);
+  const dataFromLs = localStorage.getItem('createCatLSData');
+  const preparedDataFromLS = dataFromLs && JSON.parse(dataFromLs);
+  const $createCatForm = document.forms.createCatForm;
+  if (preparedDataFromLS) {
+    Object.keys(preparedDataFromLS).forEach((key) => {
+      $createCatForm[key].value = preparedDataFromLS[key];
+    });
+  }
+  $createCatForm.addEventListener('submit', (submitEvent) => {
+    submitEvent.preventDefault();
+    const catParams = getCatParams(
+      Object.fromEntries(new FormData(submitEvent.target).entries()),
+    );
+    console.log(catParams);
+    addNewCat(catParams);
+    $createCatForm.addEventListener('change', () => {
+      const formattedData = getCatParams(
+        Object.fromEntries(new FormData($createCatForm).entries()),
+      );
+
+      localStorage.setItem('createCatLSData', JSON.stringify(formattedData));
+    });
+  });
+}
+addCatBtn.onclick = openModalHandler;
+
+/* function openCreateCatModal() {
+  modal.style.display = 'block';
+  createCatForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    addNewCat(getCatParams(e.target));
+    console.log(e.target, new FormData(e.target));
+  });
+}
+function closeCreateCatModal() {
+  modal.style.display = 'none';
+  createCatForm.removeEventListener('submit');
+}
+
+addCatBtn.onclick = openCreateCatModal;
+
+saveCatBtn.addEventListener('click', (e) => {
+  addNewCat(getCatParams(e.closest('form')));
+  closeCreateCatModal();
+});
+window.onclick = function (event) {
+  if (event.target == modal) closeCreateCatModal();
+}; */
+
+function editCat(catParams) {
   fetch(`https://cats.petiteweb.dev/api/single/XeniaGorbunova/update/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      id: `"${id}"`,
-      name: `"${name}"`,
-      image: `"${image}"`,
-      age: `"${age}"`,
-      rate: `"${rate}"`,
-      favorite: `"${favorite}"`,
-      description: `"${description}"`,
-    }),
+    body: JSON.stringify(catParams),
   })
     .then((response) => response.json())
     .then((data) => {
