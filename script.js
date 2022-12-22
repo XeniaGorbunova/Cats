@@ -94,6 +94,7 @@ function closeModalHandler(e) {
     $modal.style.display = 'none';
     $modal.removeEventListener('click', closeModalHandler);
     $modalContent.innerHTML = '';
+    document.body.style.overflow = 'auto';
   }
 }
 
@@ -132,6 +133,7 @@ document.addEventListener('keydown', (e) => {
     $modal.style.display = 'none';
     $modal.removeEventListener('click', closeModalHandler);
     $modalContent.innerHTML = '';
+    document.body.style.overflow = 'auto';
   }
 });
 
