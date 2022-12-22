@@ -18,6 +18,7 @@ const getCatElem = (cat) => `
 `;
 
 const getCatDetailElem = (cat) => `
+  <span class="close">x</span>
   <div class="card mb-2 mt-2" style="width: 18rem;">
     <img src=${cat.image} class="card-img-top" alt="cat image">
     <div class="card-body">
