@@ -99,6 +99,7 @@ function closeModalHandler(e) {
 
 function openModalHandler() {
   $modal.style.display = 'block';
+  document.body.style.overflow = 'hidden';
   $modal.addEventListener('click', closeModalHandler);
   const cloneCatCreateForm = $createCatFormTemplate.content.cloneNode(true);
   $modalContent.appendChild(cloneCatCreateForm);
@@ -136,6 +137,7 @@ document.addEventListener('keydown', (e) => {
 
 function openEditModal(e) {
   $modal.style.display = 'block';
+  document.body.style.overflow = 'hidden';
   $modal.addEventListener('click', closeModalHandler);
   const cloneCatCreateForm = $createCatFormTemplate.content.cloneNode(true);
   $modalContent.appendChild(cloneCatCreateForm);
@@ -159,6 +161,7 @@ function openEditModal(e) {
 
 function openDetailModal(e) {
   $modal.style.display = 'block';
+  document.body.style.overflow = 'hidden';
   $modal.addEventListener('click', closeModalHandler);
   fetch(`https://cats.petiteweb.dev/api/single/XeniaGorbunova/show/${+e.target.dataset.id}`)
     .then((res) => res.json())
